@@ -13,11 +13,29 @@
 
         </form>
     </section>
-
+    <code>{message}</code>
     <a href="index.html" class="redirekt">Login later?</a>
+    <a href="#" class="redirekt">Create account?</a>
 </section>
 
+<script>
+	import { redirect } from "@sveltejs/kit";
 
+    let message = ""
+
+function login(){
+    try {
+      const res = await fetch("http://localhost:9292/api/message");
+      const data = await res.json();
+      redirect "index.html"
+    } catch (error) {
+      message = "Failed to log in.";
+      console.error("Error fetching data:", error);
+    }
+    
+}
+
+</script>
 
 <style>
 
@@ -102,13 +120,3 @@ input[type="submit"]:hover {
 
 
 </style>
-
-<!-- 
-<script>
-	import { onMount } from "svelte";
-
-
-    onMount(() => {
-        document.body.style.backgroundColor = 'black';
-    })
-</script> -->
