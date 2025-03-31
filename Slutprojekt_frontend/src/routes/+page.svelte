@@ -2,12 +2,12 @@
     <h2 class="Titel-L">Login</h2>
 
     <section class="login_box">
-        <form>
+        <form on:submit={login}>
             <label for="email">Email</label>
-            <input type="email" id="email" required>
+            <input type="email" id="email" bind:value={email} required>
 
             <label for="password">Password</label>
-            <input type="password" id="password" required>
+            <input type="password" id="password" bind:value={password} required>
 
             <input type="submit" id="submit" value="Submit">
 
@@ -15,19 +15,33 @@
     </section>
     <code>{message}</code>
     <a href="index.html" class="redirekt">Login later?</a>
-    <a href="#" class="redirekt">Create account?</a>
+    <a href="Create_Account" class="redirekt">Create account?</a>
 </section>
 
 <script>
+	import { goto } from "$app/navigation";
 	import { redirect } from "@sveltejs/kit";
 
-    let message = ""
+    let message = "";
+    let password = "";
+    let email = "";
 
-function login(){
+	async function login(){
     try {
-      const res = await fetch("http://localhost:9292/api/message");
-      const data = await res.json();
-      redirect "index.html"
+        const res = await fetch("http://localhost:9292/api/login", {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify({ email, password }),
+			});
+
+			if (res.ok) {
+				const data = await res.json();
+				goto("/Create_account"); 
+			} else {
+				message = "Invalid credentials.";
+			}
     } catch (error) {
       message = "Failed to log in.";
       console.error("Error fetching data:", error);

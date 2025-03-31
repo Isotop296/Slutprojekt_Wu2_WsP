@@ -9,6 +9,5 @@ gem 'webrick'
 gem 'bcrypt'
 
 gem 'sinatra-contrib'
-gem 'rack-cors'
 gem 'jason'
 gem 'sinatra-cross_origin'
