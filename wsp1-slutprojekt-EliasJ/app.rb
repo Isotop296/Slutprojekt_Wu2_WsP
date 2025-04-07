@@ -3,8 +3,12 @@ require 'json'
 require 'sinatra/cross_origin'
 require 'bcrypt'
 require 'sqlite3'
+require 'jwt'
+
 #hdgfhgghf
 class App < Sinatra::Base
+
+    SECRET_KEY = "ArmanÄrteror"
 
     def db
         return @db if @db
@@ -39,24 +43,33 @@ class App < Sinatra::Base
 
 
     post '/api/login' do
-        cross_origin
-        
-        request_data = JSON.parse(request.body.read)
-
-        email = request_data["email"]
-        passwordcr = BCrypt::Password.new(request_data["password"])
-
-        p "hola!"
-        user = db.execute('SELECT * FROM users WHERE email = ?', [email]).first
-
-        if user(password) == passwordcr
+        begin
+          request_data = JSON.parse(request.body.read)
+          email = request_data["email"]
+          password = request_data["password"]
+      
+          user = db.execute('SELECT * FROM users WHERE email = ?', [email]).first
+      
+          if user && BCrypt::Password.new(user["password"]) == password
+            payload = {
+              user_id: user["id"],
+              role: user["role"],
+              exp: Time.now.to_i + 3600
+            }
+            token = JWT.encode(payload, SECRET_KEY, 'HS256')
+      
             status 200
             content_type :json
-            { message: "Login successful", token: "fake-jwt-token-123" }.to_json
+            { message: "Login successful", token: token }.to_json
           else
             status 401
             content_type :json
             { message: "Invalid email or password" }.to_json
+          end
+        rescue => e
+          status 500
+          content_type :json
+          { message: "Server error", error: e.message }.to_json
         end
     end
 

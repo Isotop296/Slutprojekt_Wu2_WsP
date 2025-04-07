@@ -42,12 +42,12 @@
       <code class="block text-center text-red-500 mt-4">{message}</code>
   
       <div class="flex justify-between mt-4 text-sm">
-        <a href="#" class="text-blue-500 hover:text-blue-700">Login later?</a>
-        <a href="" class="text-blue-500 hover:text-blue-700">Login?</a>
+        <a href="" class="text-blue-500 hover:text-blue-700">Login later?</a>
+        <a href="/" class="text-blue-500 hover:text-blue-700">Login?</a>
       </div>
     </div>
   </section>
-  
+
 
 
   <script>

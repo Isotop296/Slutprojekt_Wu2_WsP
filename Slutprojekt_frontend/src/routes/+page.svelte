@@ -38,7 +38,7 @@
 
 			if (res.ok) {
 				const data = await res.json();
-				goto("/Create_account"); 
+				goto("/Create_Account"); 
 			} else {
 				message = "Invalid credentials.";
 			}
