@@ -15,7 +15,7 @@
     </section>
     <code>{message}</code>
     <a href="index.html" class="redirekt">Login later?</a>
-    <a href="Create_Account" class="redirekt">Create account?</a>
+    <a href="index" class="redirekt">Create account?</a>
 </section>
 
 <script>
@@ -38,7 +38,7 @@
 
 			if (res.ok) {
 				const data = await res.json();
-				goto("/Create_Account"); 
+				goto("/index"); 
 			} else {
 				message = "Invalid credentials.";
 			}
@@ -59,7 +59,7 @@
     align-items: center;
     justify-content: center;
     height: 100vh;
-    background-image: url(/TestLoginBack.jpg);
+    background-image: url(/giphy.gif);
     background-size: cover;
 }
 

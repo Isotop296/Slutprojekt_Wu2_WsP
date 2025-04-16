@@ -19,9 +19,9 @@ class Seeder
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       username TEXT NOT NULL,
       email TEXT NOT NULL,
-      password integer,
-      description TEXT NOT NULL,
-      cuntry TEXT NOT null,
+      password TEXT NOT NULL,
+      description TEXT NOT NULL DEFAULT '',
+      country TEXT NOT null,
       role TEXT NOT NULL DEFAULT 'user'
       )")
 
@@ -29,7 +29,7 @@ class Seeder
 
   def self.populate_tables
     password_hashed2 = BCrypt::Password.create("296")
-    db.execute('INSERT INTO users (username, email, password, description, cuntry, role ) VALUES (?,?,?,?,?,?)', ["Flusek", "Elias.jadefrid@gmail.com" , password_hashed2 , "Jag heter elias.", "Sweden", "admin"])
+    db.execute('INSERT INTO users (username, email, password, description, country, role ) VALUES (?,?,?,?,?,?)', ["Flusek", "Elias.jadefrid@gmail.com" , password_hashed2 , "Jag heter elias.", "Sweden", "admin"])
 
   end
 

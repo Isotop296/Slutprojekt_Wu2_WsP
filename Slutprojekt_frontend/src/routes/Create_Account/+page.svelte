@@ -1,4 +1,6 @@
-<section class="min-h-screen flex flex-col justify-center items-center bg-gray-100 p-6">
+
+<div class="min-h-screen bg-cover bg-center" style="background-image: url('/Steam.jpg');">
+<section class="min-h-screen flex flex-col justify-center items-center p-6">
     <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
       <h2 class="text-2xl font-semibold text-center text-gray-800 mb-6">Create Account</h2>
   
@@ -42,12 +44,12 @@
       <code class="block text-center text-red-500 mt-4">{message}</code>
   
       <div class="flex justify-between mt-4 text-sm">
-        <a href="" class="text-blue-500 hover:text-blue-700">Login later?</a>
+        <a href="index" class="text-blue-500 hover:text-blue-700">Login later?</a>
         <a href="/" class="text-blue-500 hover:text-blue-700">Login?</a>
       </div>
     </div>
   </section>
-
+</div>
 
 
   <script>
@@ -74,7 +76,7 @@
           const data = await res.json();
           message = "Account created successfully!";
           console.log("Success:", data);
-          // goto("/dashboard");
+          goto("/index");
         } else {
           message = "Invalid credentials.";
         }
