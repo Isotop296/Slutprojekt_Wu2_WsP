@@ -1,3 +1,29 @@
+<main>
+    {#if topGames.length > 0}
+      <div class="relative w-full overflow-hidden rounded-xl mb-8">
+        {#each topGames as game, index (game.id)}
+          <div class="{index === currentSlide ? 'block' : 'hidden'} transition duration-500 ease-in-out">
+            <img src={game.background_image} alt={game.name} class="w-full h-64 object-cover rounded-xl" />
+            <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4 text-white">
+              <h2 class="text-xl font-bold">{game.name}</h2>
+              <p class="text-sm line-clamp-2">{game.released}</p>
+            </div>
+          </div>
+        {/each}
+  
+        <button on:click={prevSlide} class="absolute top-1/2 left-4 transform -translate-y-1/2 text-white text-2xl font-bold">‹</button>
+        <button on:click={nextSlide} class="absolute top-1/2 right-4 transform -translate-y-1/2 text-white text-2xl font-bold">›</button>
+      </div>
+    {/if}
+  </main>
+  
+
+
+
+
+
+
+
 <nav class="flex gap-4 mb-6 justify-center"> 
     {#each genres as genre}
     <button on:click={() => getGamesByGenre(genre)}
@@ -35,12 +61,20 @@
 {/if}
 
 <script>
-
+	import { onMount } from "svelte";
+  let currentSlide = 0;
+  let topGames = [];
   let genres = ["action", "adventure", "indie", "rpg", "romans"];
   let selectedGenre = "";
   let games = []; //detta felmeddelandet är okej då den bara inte vet vad arrayen ska innehålla, men koden som används vet vad den innehåller.
   let message = "";
   let page = 1;
+
+
+  onMount(async () => {
+    await getTopGames();
+    });
+
 
   async function getGamesByGenre(genre) {
     selectedGenre = genre;
@@ -51,7 +85,7 @@
 
 async function loadMore() {
     try {
-        const res = await fetch("http://localhost:9292/api/GetGamesByGenre", {
+        const res = await fetch("http://localhost:9292/api/GetGameByGenre", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -74,6 +108,30 @@ async function loadMore() {
 
 }
 
+
+async function getTopGames() {
+  try {
+    const res = await fetch("http://localhost:9292/api/GetTopGames");
+    if (res.ok) {
+      const data = await res.json();
+      topGames = data.results;
+    } else {
+      message = "Couldn't fetch top games.";
+    }
+  } catch (error) {
+    message = "Failed to fetch top games.";
+    console.error("Top Games Error:", error);
+  }
+}
+
+
+function nextSlide() {
+  currentSlide = (currentSlide + 1) % topGames.length;
+}
+
+function prevSlide() {
+  currentSlide = (currentSlide - 1 + topGames.length) % topGames.length;
+}
 
 
 

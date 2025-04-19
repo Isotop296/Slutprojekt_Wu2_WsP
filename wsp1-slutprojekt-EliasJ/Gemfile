@@ -13,3 +13,5 @@ gem 'jason'
 gem 'sinatra-cross_origin'
 gem 'jwt'
 gem "dotenv", "~> 3.1"
+gem 'httparty'
+

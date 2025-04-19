@@ -5,6 +5,7 @@ require 'bcrypt'
 require 'sqlite3'
 require 'jwt'
 require 'dotenv/load'
+require 'httparty'
 
 
 #hdgfhgghf
@@ -97,8 +98,6 @@ class App < Sinatra::Base
             end
            password_digest = BCrypt::Password.create(password)
 
-           p password_digest
-
 
             db.execute('INSERT INTO users (email, password, username, country) 
                 VALUES (?, ?, ?, ?)',[email, password_digest, username, country])
@@ -125,12 +124,31 @@ class App < Sinatra::Base
 
         get "/api/GetGameByGenre" do
             genre = params[:genre]
-            rawg_url = "https://api.rawg.io/api/games/#{id}?key=#{ENV['RAWG_KEY']}"
+            page = params[:page] || 1
+            puts "genre: #{genre}"
+            puts "page: #{page}"                        
+            rawg_key = ENV['RAWG_KEY']
+          
+            rawg_url = "https://api.rawg.io/api/games?genres=#{genre}&page=#{page}&page_size=8&key=#{rawg_key}"
+          
+            puts "Calling RAWG URL: #{rawg_url}"
+          
             response = HTTParty.get(rawg_url)
-            json response.body
-          end
+
+            puts "party: #{response}" 
+          
+            content_type :json
+            response.body
+        end
 
 
+        get "/api/GetTopGames" do
+            key = ENV["RAWG_KEY"]
+            url = "https://api.rawg.io/api/games?ordering=-rating&page=1&page_size=5&key=#{key}"
+            response = HTTParty.get(url)
+            content_type :json
+            response.body
+        end
 end
 
 
