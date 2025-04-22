@@ -76,6 +76,7 @@
           const data = await res.json();
           message = "Account created successfully!";
           console.log("Success:", data);
+          localStorage.setItem("token", data.token);
           goto("/index");
         } else {
           message = "Invalid credentials.";
@@ -87,3 +88,12 @@
     }
   </script>
   
+
+
+  <style>
+    #navbar{
+      position: absolute; 
+    top: -1000px; 
+    left: -1000px;
+    }
+  </style>

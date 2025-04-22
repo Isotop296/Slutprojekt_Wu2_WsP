@@ -1,18 +1,21 @@
+<nav></nav>
+
 <main>
     {#if topGames.length > 0}
-      <div class="relative w-full overflow-hidden rounded-xl mb-8">
+      <div class="relative w-200 h-80 overflow-hidden rounded-xl mb-8 left-55 top-10 bg-gradient-to-t from-black/80 to-black/50">
         {#each topGames as game, index (game.id)}
           <div class="{index === currentSlide ? 'block' : 'hidden'} transition duration-500 ease-in-out">
-            <img src={game.background_image} alt={game.name} class="w-full h-64 object-cover rounded-xl" />
-            <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4 text-white">
-              <h2 class="text-xl font-bold">{game.name}</h2>
-              <p class="text-sm line-clamp-2">{game.released}</p>
-            </div>
+            <div class="absolute top-0 right-5 p-4 text-white w-95">
+                <h2 class="text-xl font-bold">{game.name}</h2>
+                <p class="text-sm line-clamp-2">{game.released}</p>
+                <p class="text-sm text-gray-200 italic mt-2 leading-snug text-centre">{@html game.description}</p>
+              </div>
+            <img src={game.background_image} alt={game.name} class="w-100 h-60 object-cover rounded-xl" />
           </div>
         {/each}
   
-        <button on:click={prevSlide} class="absolute top-1/2 left-4 transform -translate-y-1/2 text-white text-2xl font-bold">‹</button>
-        <button on:click={nextSlide} class="absolute top-1/2 right-4 transform -translate-y-1/2 text-white text-2xl font-bold">›</button>
+        <button on:click={prevSlide} class="absolute top-1/2 left-4 transform -translate-y-1/2 text-white text-5xl font-bold">‹</button>
+        <button on:click={nextSlide} class="absolute top-1/2 right-4 transform -translate-y-1/2 text-white text-5xl font-bold">›</button>
       </div>
     {/if}
   </main>
@@ -62,6 +65,8 @@
 
 <script>
 	import { onMount } from "svelte";
+
+  let gameDescriptions = {};
   let currentSlide = 0;
   let topGames = [];
   let genres = ["action", "adventure", "indie", "rpg", "romans"];
@@ -114,7 +119,7 @@ async function getTopGames() {
     const res = await fetch("http://localhost:9292/api/GetTopGames");
     if (res.ok) {
       const data = await res.json();
-      topGames = data.results;
+      topGames = data;
     } else {
       message = "Couldn't fetch top games.";
     }
@@ -133,6 +138,13 @@ function prevSlide() {
   currentSlide = (currentSlide - 1 + topGames.length) % topGames.length;
 }
 
+
+
+async function fetchDescription(id) {
+  const res = await fetch(`http://localhost:9292/api/GetGameDetails?id=${id}`);
+  const data = await res.json();
+  gameDescriptions[id] = data.description;
+}
 
 
 </script>

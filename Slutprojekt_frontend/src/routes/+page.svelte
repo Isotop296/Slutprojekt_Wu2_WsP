@@ -38,6 +38,7 @@
 
 			if (res.ok) {
 				const data = await res.json();
+                localStorage.setItem("token", data.token);
 				goto("/index"); 
 			} else {
 				message = "Invalid credentials.";
@@ -52,6 +53,11 @@
 </script>
 
 <style>
+#navbar{
+      position: absolute; 
+    top: -1000px; 
+    left: -1000px;
+}
 
 .box {
     display: flex;

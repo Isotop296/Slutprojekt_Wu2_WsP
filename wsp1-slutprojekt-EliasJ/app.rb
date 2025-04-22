@@ -146,9 +146,44 @@ class App < Sinatra::Base
             key = ENV["RAWG_KEY"]
             url = "https://api.rawg.io/api/games?ordering=-rating&page=1&page_size=5&key=#{key}"
             response = HTTParty.get(url)
+            games = JSON.parse(response.body)["results"]
+          
+            games_with_descriptions = games.map do |game|
+              game_id = game["id"]
+              details_url = "https://api.rawg.io/api/games/#{game_id}?key=#{key}"
+              details_response = HTTParty.get(details_url)
+          
+              next unless details_response.code == 200
+          
+              game_details = JSON.parse(details_response.body)
+          
+              has_banned_genre = game_details["tags"].any? do |genre|
+                genre["name"].downcase.include?("sex")
+              end
+          
+              next if has_banned_genre
+          
+              game["description"] = game_details["description"]
+              game
+            end
+          
+            games_with_descriptions.compact!
+          
+            content_type :json
+            games_with_descriptions.to_json
+          end
+          
+          
+        get "/api/GetGameDetails" do
+            id = params[:id]
+            key = ENV["RAWG_KEY"]
+            url = "https://api.rawg.io/api/games/#{id}?key=#{key}"
+          
+            response = HTTParty.get(url)
             content_type :json
             response.body
-        end
+          end
+          
 end
 
 
