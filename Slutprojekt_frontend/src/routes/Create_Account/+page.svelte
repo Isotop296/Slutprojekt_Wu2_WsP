@@ -55,6 +55,8 @@
   <script>
     import { goto } from "$app/navigation";
     import { redirect } from "@sveltejs/kit";
+    import { browser } from '$app/environment';
+
   
     let message = "";
     let password = "";
@@ -88,12 +90,3 @@
     }
   </script>
   
-
-
-  <style>
-    #navbar{
-      position: absolute; 
-    top: -1000px; 
-    left: -1000px;
-    }
-  </style>

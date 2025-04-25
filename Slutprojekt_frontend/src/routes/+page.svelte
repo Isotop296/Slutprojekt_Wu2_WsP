@@ -14,13 +14,16 @@
         </form>
     </section>
     <code>{message}</code>
-    <a href="index.html" class="redirekt">Login later?</a>
-    <a href="index" class="redirekt">Create account?</a>
+    <a href="index" class="redirekt">Login later?</a>
+    <a href="Create_Account" class="redirekt">Create account?</a>
 </section>
 
 <script>
 	import { goto } from "$app/navigation";
 	import { redirect } from "@sveltejs/kit";
+    import { browser } from '$app/environment';
+  
+
 
     let message = "";
     let password = "";
@@ -53,12 +56,6 @@
 </script>
 
 <style>
-#navbar{
-      position: absolute; 
-    top: -1000px; 
-    left: -1000px;
-}
-
 .box {
     display: flex;
     flex-direction: column;

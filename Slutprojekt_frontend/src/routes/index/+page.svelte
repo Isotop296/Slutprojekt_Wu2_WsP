@@ -1,6 +1,11 @@
 <nav></nav>
 
 <main>
+    {#if loading}
+
+        <div>loading</div>
+
+    {:else}
     {#if topGames.length > 0}
       <div class="relative w-200 h-80 overflow-hidden rounded-xl mb-8 left-55 top-10 bg-gradient-to-t from-black/80 to-black/50">
         {#each topGames as game, index (game.id)}
@@ -17,6 +22,7 @@
         <button on:click={prevSlide} class="absolute top-1/2 left-4 transform -translate-y-1/2 text-white text-5xl font-bold">‹</button>
         <button on:click={nextSlide} class="absolute top-1/2 right-4 transform -translate-y-1/2 text-white text-5xl font-bold">›</button>
       </div>
+    {/if}
     {/if}
   </main>
   
@@ -65,12 +71,17 @@
 
 <script>
 	import { onMount } from "svelte";
+    import { browser } from '$app/environment';
 
+  let loading = true
   let gameDescriptions = {};
   let currentSlide = 0;
   let topGames = [];
   let genres = ["action", "adventure", "indie", "rpg", "romans"];
   let selectedGenre = "";
+  /**
+	 * @type {string | any[]}
+	 */
   let games = []; //detta felmeddelandet är okej då den bara inte vet vad arrayen ska innehålla, men koden som används vet vad den innehåller.
   let message = "";
   let page = 1;
@@ -78,6 +89,7 @@
 
   onMount(async () => {
     await getTopGames();
+    loading = false
     });
 
 
@@ -85,25 +97,27 @@
     selectedGenre = genre;
     page = 1;
     games = [];
-    await loadMore(); 
+    await loadMore(genre); 
   }
 
-async function loadMore() {
+async function loadMore(genre) {
     try {
+      console.log("genre: ", genre)
         const res = await fetch("http://localhost:9292/api/GetGameByGenre", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({genre: selectedGenre, page }),
+          body: JSON.stringify({genre: genre, page }),
         });
 
         if (res.ok) {
           const data = await res.json();
           games = [...games, ...data.results];
-        page += 1;
+          page += 1;
           console.log("Success:", data);
         } else {
+          console.log("failed:", genre)
           message = "Couldent fetch games.";
         }
       } catch (error) {

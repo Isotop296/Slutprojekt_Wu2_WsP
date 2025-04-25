@@ -122,9 +122,13 @@ class App < Sinatra::Base
             end
         end
 
-        get "/api/GetGameByGenre" do
-            genre = params[:genre]
-            page = params[:page] || 1
+        post "/api/GetGameByGenre" do
+          requested_data = JSON.parse(request.body.read)
+          request_body = request.body.read
+          puts "Request body: #{request_body}"
+
+            genre = requested_data["genre"]
+            page = requested_data["page"] 
             puts "genre: #{genre}"
             puts "page: #{page}"                        
             rawg_key = ENV['RAWG_KEY']
