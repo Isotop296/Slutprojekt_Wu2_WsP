@@ -57,7 +57,22 @@ class App < Sinatra::Base
       end
     end
 
-    post '/api/login' do
+    get '/api/users' do
+      token = request.cookies["token"]
+    
+      begin
+        payload = JWT.decode(token, "your_secret_key", true, algorithm: "HS256")[0]
+        user_id = payload["user_id"]
+        user = User.find(user_id)
+    
+        content_type :json
+        user.to_json
+      rescue
+        status 401
+      end
+    end
+    
+    post '/api/users/login' do
         begin
           request_data = JSON.parse(request.body.read)
 
@@ -67,16 +82,21 @@ class App < Sinatra::Base
           user = db.execute('SELECT * FROM users WHERE email = ?', [email]).first
       
           if user && BCrypt::Password.new(user["password"]) == password
-            payload = {
-              user_id: user["id"],
-              role: user["role"],
-              exp: Time.now.to_i + 3600
-            }
-            token = JWT.encode(payload, SECRET_KEY, 'HS256')
+            payload = { user_id: user["id"] }
+            jwt_token = JWT.encode(payload, SECRET_KEY, 'HS256')
+
+            response.set_cookie(
+              "token",
+              value: jwt_token,
+              path: "/",
+              httponly: true,   # skyddar från JavaScript
+              secure: true,     # endast via HTTPS
+              same_site: "Strict" # skyddar mot CSRF
+            )            
       
             status 200
             content_type :json
-            { message: "Login successful", token: token }.to_json
+            { message: "Login successful"}.to_json
           else
             status 401
             content_type :json
@@ -90,7 +110,7 @@ class App < Sinatra::Base
     end
 
 
-    post '/api/create_account' do
+    post '/api/users/create_account' do
         begin 
 
             request_data = JSON.parse(request.body.read)
@@ -116,13 +136,19 @@ class App < Sinatra::Base
 
             new_user = db.execute('SELECT * FROM users WHERE email = ?', [email]).first
 
-            payload = {
-                user_id: new_user["id"],
-                role: new_user["role"],
-                exp: Time.now.to_i + 3600
-            }
+            payload = { user_id: new_user["id"] }
+            jwt_token = JWT.encode(payload, SECRET_KEY, 'HS256')
 
-            token = JWT.encode(payload, SECRET_KEY, 'HS256')
+
+            response.set_cookie(
+            "token",
+            value: jwt_token,
+            path: "/",
+            httponly: true,   # skyddar från JavaScript
+            secure: true,     # endast via HTTPS
+            same_site: "Strict" # skyddar mot CSRF
+)
+
             status 200
             content_type :json
             { message: "Account created successfully", token: token }.to_json
@@ -211,25 +237,22 @@ class App < Sinatra::Base
           end
           
           
-        get "/api/GetGameDetails" do
-            id = params[:id]
-            key = ENV["RAWG_KEY"]
-            url = "https://api.rawg.io/api/games/#{id}?key=#{key}"
+        # get "/api/GetGameDetails" do
+        #     id = params[:id]
+        #     key = ENV["RAWG_KEY"]
+        #     url = "https://api.rawg.io/api/games/#{id}?key=#{key}"
           
-            response = HTTParty.get(url)
-            content_type :json
-            response.body
-          end
+        #     response = HTTParty.get(url)
+        #     content_type :json
+        #     response.body
+        #   end
           
 
 
-          post "/api/favorite" do
-            authorization_header = request.env["HTTP_AUTHORIZATION"]
-            token = authorization_header.split(" ").last if authorization_header
-          
-            begin
-              decoded_token = JWT.decode(token, SECRET_KEY, true, { algorithm: 'HS256' })
-              user_id = decoded_token[0]["user_id"]  
+          post "/api/favorites/new" do
+            token = request.cookies["token"]
+            begin             
+              user_id = authenticated_user(token)
 
               request_body = request.body.read
               requested_data = JSON.parse(request_body)
@@ -257,13 +280,11 @@ class App < Sinatra::Base
           end
           
           
-          post "/api/wishlist" do
-            authorization_header = request.env["HTTP_AUTHORIZATION"]
-            token = authorization_header.split(" ").last if authorization_header
+          post "/api/wishlist/new" do
+            token = request.cookies["token"]
           
             begin
-              decoded_token = JWT.decode(token, SECRET_KEY, true, { algorithm: 'HS256' })
-              user_id = decoded_token[0]["user_id"]  
+              user_id = authenticated_user(token)
           
               request_body = request.body.read
               requested_data = JSON.parse(request_body)
@@ -293,10 +314,9 @@ class App < Sinatra::Base
 
 
 
-          get '/api/getfavorites' do
+          get '/api/favorites' do
             begin
-              authorization_header = request.env["HTTP_AUTHORIZATION"]
-              token = authorization_header.split(" ").last if authorization_header
+              token = request.cookies["token"]
 
               user_id = authenticated_user(token)
 
@@ -313,10 +333,9 @@ class App < Sinatra::Base
             end
           end
 
-          get '/api/getwishlist' do
+          get '/api/wishlist' do
             begin
-              authorization_header = request.env["HTTP_AUTHORIZATION"]
-              token = authorization_header.split(" ").last if authorization_header
+              token = request.cookies["token"]
 
               user_id = authenticated_user(token)
 
@@ -364,8 +383,7 @@ class App < Sinatra::Base
           end
           
           post "/api/removegame" do 
-            authorization_header = request.env["HTTP_AUTHORIZATION"]
-            token = authorization_header.split(" ").last if authorization_header
+            token = request.cookies["token"]
 
             request_body = request.body.read
             requested_data = JSON.parse(request_body)
@@ -394,6 +412,55 @@ class App < Sinatra::Base
             end
           end
 
+
+          get '/api/userinfo' do
+            token = request.cookies["token"]
+          
+            user_id = authenticated_user(token)
+            puts "user id: #{user_id}"
+          
+            if user_id
+              user = db.execute("SELECT * FROM users WHERE id = ?", [user_id])
+              puts "user: #{user}"
+              if user
+                status 200
+                content_type :json
+                user.to_json
+              else
+                status 404
+                { error: "User not found" }.to_json
+              end
+            else
+              status 401
+              { error: "Unauthorized" }.to_json
+            end
+          end
+
+
+          post '/api/userinfo/update' do
+            token = request.cookies["token"]
+          
+            user_id = authenticated_user(token)
+
+            request_body = request.body.read
+            requested_data = JSON.parse(request_body)
+
+            username = requested_data["username"]
+            description = requested_data["description"]
+            puts "username: #{username}"
+            puts "Description: #{description}"
+            
+            begin
+              db.execute("UPDATE users SET username = ?, description = ? WHERE id = ?", [username, description, user_id])
+              status 200
+              { message: 'User info updated successfully' }.to_json
+            rescue => e
+              status 500
+              { error: 'Database error', details: e.message }.to_json
+            end
+
+          end
+          
 
 end
 

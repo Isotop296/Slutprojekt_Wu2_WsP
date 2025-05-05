@@ -1,12 +1,15 @@
 <script>
 	import { onMount } from "svelte";
+    import { goto } from '$app/navigation';
+    import { browser } from '$app/environment';
 
+    let userInfo = [];
     let favoriteGamesid = [];
     let wishlistGamesid = [];
     let favoriteGames = [];
     let wishlistGames = [];
     let games = [];
-    const token = localStorage.getItem("token") || null;
+    let showForm = false;
 
     onMount(async () => {
         await getfavorite();
@@ -18,11 +21,9 @@
 
     async function getfavorite() {
         try {
-      const res = await fetch("http://localhost:9292/api/getfavorites", {
+      const res = await fetch("http://localhost:9292/api/favorites", {
         method: "GET",
         headers: {
-          
-          "Authorization": `Bearer ${token}`,
           "Content-Type": "application/json"
         }
       });
@@ -40,10 +41,9 @@
 
     async function getwishlist() {
         try {
-      const res = await fetch("http://localhost:9292/api/getwishlist", {
+      const res = await fetch("http://localhost:9292/api/wishlist", {
         method: "GET",
         headers: {
-          "Authorization": `Bearer ${token}`,
           "Content-Type": "application/json"
         }
       });
@@ -92,8 +92,7 @@
             const res = await fetch("http://localhost:9292/api/removegame", {
                 method: "POST",
                 headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${token}`
+                    "Content-Type": "application/json"
                 },
                 body: JSON.stringify({gameid: gameid, type: type})
             });
@@ -114,13 +113,74 @@
     }
 
 
+    function logut() {
+	
+	}
+
+    async function getUserInfo(){
+        try {
+      const res = await fetch("http://localhost:9292/api/userinfo", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json"
+        }
+      });
+      if (res.ok) {
+        userInfo = await res.json();
+        console.log("User info:", userInfo);
+        showForm = true;
+      } else {
+        console.error("Failed to fetch user info.");
+      }
+    } catch (error) {
+      console.error("Error fetching user info:", error);
+    }
+    }
+
+
+    async function update(username, description){
+        try {
+            const res = await fetch("http://localhost:9292/api/userinfo/update", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({username: username, description: description})
+            });
+            if (res.ok) {
+                console.log("saved");
+                showForm = false;
+            } else {
+                console.error("Failed to save new info.");
+            }
+        } catch (error) {
+            console.error("Error saving information:", error);
+        }
+
+
+    }
+
+
 </script>
 
 
 
 <h1>Jag hann inte med mer så det fick räka med detta som profile. :)</h1>
+<button on:click={logut()} class="bg-green-600 text-white px-4 py-2 rounded-full hover:bg-green-700 transition">Log ut</button>
 
+<button on:click={getUserInfo()} class="bg-green-600 text-white px-4 py-2 rounded-full hover:bg-green-700 transition">Edit Profile</button>
 
+{#if showForm}
+<form on:submit={update(userInfo.username, userInfo.description)} class="grid gap-4">
+    <label> Username:<input type="text" bind:value={userInfo.username} class="px-3 py-2 rounded-lg border border-gray-300 focus:ring focus:ring-blue-300"/>
+      </label>
+      <label>description:<input type="text" bind:value={userInfo.description} class="px-3 py-2 rounded-lg border border-gray-300 focus:ring focus:ring-blue-300"/>
+      </label>
+    
+      <button type="submit" class="w-30 h-10 py-2 px-2 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 font-size: 18px;">Spara ändringar</button>
+    
+   </form>
+{/if}
 
 <h2>Favoritspel</h2>
 {#if favoriteGames.length > 0}

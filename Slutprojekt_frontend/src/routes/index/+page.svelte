@@ -15,7 +15,6 @@
   let message = "";
   let page = 1;
   let selectedGame = null;
-  const token = localStorage.getItem("token") || null;
 
   onMount(async () => {
     await getTopGames();
@@ -98,22 +97,20 @@ function handleGameClick(game) {
 }
 
 async function wishlist(selectedGame){
-    const res = await fetch("http://localhost:9292/api/wishlist", {
+    const res = await fetch("http://localhost:9292/api/wishlist/new", {
           method: "POST",
           headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`
+            "Content-Type": "application/json"
           },
           body: JSON.stringify({game_id: selectedGame.id }),
         });
 }
 
 async function favorite(selectedGame){
-  const res = await fetch("http://localhost:9292/api/favorite", {
+  const res = await fetch("http://localhost:9292/api/favorites/new", {
           method: "POST",
           headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`
+            "Content-Type": "application/json"
           },
           body: JSON.stringify({game_id: selectedGame.id }),
         });
@@ -184,12 +181,14 @@ async function favorite(selectedGame){
     <img src={selectedGame.background_image} alt={selectedGame.name} class="w-full h-64 object-cover rounded mb-4" />
     <p class="text-sm mb-2">Released: {selectedGame.released}</p>
     <p class="text-base max-h-48 overflow-y-auto">{@html selectedGame.description || "Ingen beskrivning tillgänglig."}</p>
+    {#if token}
     <button class="bg-blue-600 text-white px-6 py-2 rounded-full hover:bg-blue-700 transition duration-300 ease-in-out" on:click={() => favorite(selectedGame)}>
   Save as favorite
 </button>
     <button class="bg-green-600 text-white px-6 py-2 rounded-full hover:bg-green-700 transition duration-300 ease-in-out" on:click={() => wishlist(selectedGame)}>
   Wishlist
 </button>
+{/if}
   </div>
   {/if}
 </section>

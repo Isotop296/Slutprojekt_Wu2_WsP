@@ -38,7 +38,6 @@ class Seeder
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         user_id INTEGER NOT NULL,
         game_id INTEGER NOT NULL
-
       )")
 
   end

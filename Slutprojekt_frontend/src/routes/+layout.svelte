@@ -3,14 +3,39 @@
 	import { onMount } from 'svelte';
 	import { browser } from '$app/environment';
 	import { page } from '$app/stores';
-
 	import '../app.css';
+	import { goto } from '$app/navigation';
+
+
 	let { children } = $props();
 
 	let menuOpen = false;
+  let user_status = false;
 
-	const token = browser ? localStorage.getItem("token") : null;
-	console.log("token here:", token);
+	onMount(() => {
+		if (browser) {
+      {user_log()}
+			if (user && $page.url.pathname === '/') {
+				goto('/index'); 
+			}
+		}
+	});
+
+   async function user_log(){
+    if (typeof window !== 'undefined') {
+		const res = await fetch('/api/users',{credentials: 'include'});
+
+		if (res.ok) {
+			const user = await res.json();
+      user_status = true;
+			console.log('Inloggad som:', user);
+			goto('/index');
+		} else {
+			console.log('Inte inloggad');
+		}
+	}
+
+   }
 
 </script>
 
@@ -32,12 +57,12 @@
     <div class="hidden md:flex items-center gap-4">
 		<input type="text" placeholder="Search games..." class="px-4 py-2 rounded-full bg-gray-100 text-black focus:outline-none focus:ring-2 focus:ring-blue-400 w-50 h-8"/>	  
       <!-- kanske ha en annan bild här under beroende på om man är inloggad eller inte. hittade dock ingen -->
-		{#if token} 
+		{#if user_status} 
         <a href="/profile">
           <img src="/icon2.png" alt="profile" class="h-10 w-10 rounded-full border-2 border-white shadow-md" />
         </a>
       {:else}
-        <a href="/login">
+        <a href="/">
           <img src="/icon2.png" alt="login" class="h-10 w-10 rounded-full border-2 border-white shadow-md" />
         </a>
       {/if}
@@ -46,7 +71,7 @@
     {#if menuOpen}
     <div class="absolute top-full left-0 w-full bg-[#171d25] flex flex-col items-center py-4 md:hidden">
       <input type="text" placeholder="Search" class="px-3 py-2 mb-4 rounded-lg text-black w-2/3" />
-      {#if token}
+      {#if user_status}
         <a href="/profile" class="text-white mb-2">Profile</a>
       {:else}
         <a href="/login" class="text-white mb-2">Login</a>

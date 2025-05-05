@@ -66,7 +66,7 @@
   
     async function create() {
       try {
-        const res = await fetch("http://localhost:9292/api/create_account", {
+        const res = await fetch("http://localhost:9292/api/users/create_account", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -78,7 +78,6 @@
           const data = await res.json();
           message = "Account created successfully!";
           console.log("Success:", data);
-          localStorage.setItem("token", data.token);
           goto("/index");
         } else {
           message = "Invalid credentials.";

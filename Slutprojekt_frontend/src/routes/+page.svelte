@@ -31,7 +31,7 @@
 
 	async function login(){
     try {
-        const res = await fetch("http://localhost:9292/api/login", {
+        const res = await fetch("http://localhost:9292/api/users/login", {
 				method: "POST",
 				headers: {
 					"Content-Type": "application/json",
@@ -41,7 +41,6 @@
 
 			if (res.ok) {
 				const data = await res.json();
-                localStorage.setItem("token", data.token);
 				goto("/index"); 
 			} else {
 				message = "Invalid credentials.";
