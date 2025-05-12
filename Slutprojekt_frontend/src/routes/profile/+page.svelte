@@ -2,6 +2,7 @@
 	import { onMount } from "svelte";
     import { goto } from '$app/navigation';
     import { browser } from '$app/environment';
+    import { user, userStatus } from '../../stores/userStore';
 
     let userInfo = [];
     let favoriteGamesid = [];
@@ -12,17 +13,18 @@
     let showForm = false;
 
     onMount(async () => {
-        await getfavorite();
-        await getwishlist();
+        await favorite();
+        await wishlist();
         await getgames(favoriteGamesid, 'favorite');
         await getgames(wishlistGamesid, 'wishlist');
     });
 
 
-    async function getfavorite() {
+    async function favorite() {
         try {
       const res = await fetch("http://localhost:9292/api/favorites", {
         method: "GET",
+        credentials: "include",
         headers: {
           "Content-Type": "application/json"
         }
@@ -39,10 +41,11 @@
 
     }
 
-    async function getwishlist() {
+    async function wishlist() {
         try {
       const res = await fetch("http://localhost:9292/api/wishlist", {
         method: "GET",
+        credentials: "include",
         headers: {
           "Content-Type": "application/json"
         }
@@ -63,6 +66,7 @@
         try {
             const res = await fetch("http://localhost:9292/api/getgames", {
                 method: "POST",
+                credentials: "include",
                 headers: {
                     "Content-Type": "application/json"
                 },
@@ -91,6 +95,7 @@
             console.log("Game id:", gameid)
             const res = await fetch("http://localhost:9292/api/removegame", {
                 method: "POST",
+                credentials: "include",
                 headers: {
                     "Content-Type": "application/json"
                 },
@@ -113,14 +118,24 @@
     }
 
 
-    function logut() {
-	
-	}
+    async function logut() {
+  await fetch("http://localhost:9292/api/users/logout", {
+    method: "POST",
+    credentials: "include"
+  });
+
+  user.set(null); 
+  console.log(user)
+  userStatus.set(false);
+  console.log(userStatus)
+  goto("/");
+}
 
     async function getUserInfo(){
         try {
-      const res = await fetch("http://localhost:9292/api/userinfo", {
+      const res = await fetch("http://localhost:9292/api/users", {
         method: "GET",
+        credentials: "include",
         headers: {
           "Content-Type": "application/json"
         }
@@ -140,8 +155,9 @@
 
     async function update(username, description){
         try {
-            const res = await fetch("http://localhost:9292/api/userinfo/update", {
+            const res = await fetch("http://localhost:9292/api/users/update", {
                 method: "POST",
+                credentials: "include",
                 headers: {
                     "Content-Type": "application/json"
                 },
@@ -165,7 +181,7 @@
 
 
 
-<h1>Jag hann inte med mer så det fick räka med detta som profile. :)</h1>
+<h1>Jag hann inte med mer så det fick räka med detta som profile.</h1>
 <button on:click={logut()} class="bg-green-600 text-white px-4 py-2 rounded-full hover:bg-green-700 transition">Log ut</button>
 
 <button on:click={getUserInfo()} class="bg-green-600 text-white px-4 py-2 rounded-full hover:bg-green-700 transition">Edit Profile</button>

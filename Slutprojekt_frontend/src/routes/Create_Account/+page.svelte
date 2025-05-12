@@ -72,6 +72,7 @@
             "Content-Type": "application/json",
           },
           body: JSON.stringify({ email, password, username, country }),
+          credentials: "include"
         });
   
         if (res.ok) {

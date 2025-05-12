@@ -25,23 +25,21 @@ class App < Sinatra::Base
         enable :cross_origin
     end
 
-    options '*' do
-        response.headers["Access-Control-Allow-Origin"] = "*"
-        response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
-        response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
-        status 200
-      end
-      
-      
-
-      before do
-        response.headers["Access-Control-Allow-Origin"] = "*"
-        response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
-        response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
+    before do
+      response.headers["Access-Control-Allow-Origin"] = "http://localhost:5173"
+      response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
+      response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
+      response.headers["Access-Control-Allow-Credentials"] = "true"
     end
     
-
-    enable :sessions
+    options "*" do
+      response.headers["Access-Control-Allow-Origin"] = "http://localhost:5173"
+      response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
+      response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
+      response.headers["Access-Control-Allow-Credentials"] = "true"
+      200
+    end
+  
 
     def authenticated_user(token)
       if token
@@ -57,20 +55,72 @@ class App < Sinatra::Base
       end
     end
 
+
     get '/api/users' do
+      puts "start of users"
       token = request.cookies["token"]
+      puts "token: #{token}"
+      user_id = authenticated_user(token)
+      puts "user id: #{user_id}"
     
-      begin
-        payload = JWT.decode(token, "your_secret_key", true, algorithm: "HS256")[0]
-        user_id = payload["user_id"]
-        user = User.find(user_id)
-    
-        content_type :json
-        user.to_json
-      rescue
+      if user_id
+        user = db.execute("SELECT * FROM users WHERE id = ?", [user_id])
+        puts "user: #{user}"
+        if user
+          status 200
+          content_type :json
+          user.to_json
+        else
+          status 404
+          { error: "User not found" }.to_json
+        end
+      else
         status 401
+        { error: "Unauthorized" }.to_json
       end
     end
+
+
+    post '/api/users/update' do
+      token = request.cookies["token"]
+    
+      user_id = authenticated_user(token)
+
+      request_body = request.body.read
+      requested_data = JSON.parse(request_body)
+
+      username = requested_data["username"]
+      description = requested_data["description"]
+      puts "username: #{username}"
+      puts "Description: #{description}"
+      
+      begin
+        db.execute("UPDATE users SET username = ?, description = ? WHERE id = ?", [username, description, user_id])
+        status 200
+        { message: 'User info updated successfully' }.to_json
+      rescue => e
+        status 500
+        { error: 'Database error', details: e.message }.to_json
+      end
+
+    end
+
+
+    post "/api/users/logout" do
+      response.set_cookie("token", {
+        value: "",
+        path: "/", 
+        expires: Time.at(0), 
+        same_site: "Lax",     
+        secure: true,         
+        httponly: true       
+      })
+    
+    
+      status 200
+      json({ message: "Logged out" })
+    end
+
     
     post '/api/users/login' do
         begin
@@ -90,8 +140,9 @@ class App < Sinatra::Base
               value: jwt_token,
               path: "/",
               httponly: true,   # skyddar från JavaScript
-              secure: true,     # endast via HTTPS
-              same_site: "Strict" # skyddar mot CSRF
+              secure: false,     # endast via HTTPS
+              same_site: "Lax", # skyddar mot CSRF
+              expires: Time.now + 60 * 60 * 24 
             )            
       
             status 200
@@ -145,13 +196,14 @@ class App < Sinatra::Base
             value: jwt_token,
             path: "/",
             httponly: true,   # skyddar från JavaScript
-            secure: true,     # endast via HTTPS
-            same_site: "Strict" # skyddar mot CSRF
+            secure: false,     # endast via HTTPS
+            same_site: "Lax", # skyddar mot CSRF
+            expires: Time.now + 60 * 60 * 24 
 )
 
             status 200
             content_type :json
-            { message: "Account created successfully", token: token }.to_json
+            { message: "Account created successfully" }.to_json
 
             rescue => e
                 status 500
@@ -411,55 +463,7 @@ class App < Sinatra::Base
               { message: "Invalid type specified" }.to_json
             end
           end
-
-
-          get '/api/userinfo' do
-            token = request.cookies["token"]
-          
-            user_id = authenticated_user(token)
-            puts "user id: #{user_id}"
-          
-            if user_id
-              user = db.execute("SELECT * FROM users WHERE id = ?", [user_id])
-              puts "user: #{user}"
-              if user
-                status 200
-                content_type :json
-                user.to_json
-              else
-                status 404
-                { error: "User not found" }.to_json
-              end
-            else
-              status 401
-              { error: "Unauthorized" }.to_json
-            end
-          end
-
-
-          post '/api/userinfo/update' do
-            token = request.cookies["token"]
-          
-            user_id = authenticated_user(token)
-
-            request_body = request.body.read
-            requested_data = JSON.parse(request_body)
-
-            username = requested_data["username"]
-            description = requested_data["description"]
-            puts "username: #{username}"
-            puts "Description: #{description}"
-            
-            begin
-              db.execute("UPDATE users SET username = ?, description = ? WHERE id = ?", [username, description, user_id])
-              status 200
-              { message: 'User info updated successfully' }.to_json
-            rescue => e
-              status 500
-              { error: 'Database error', details: e.message }.to_json
-            end
-
-          end
+     
           
 
 end
